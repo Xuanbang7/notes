@@ -515,11 +515,11 @@ body {
       <br>Create a token with <b>gist</b> scope only
     </div>
 
-    <label>Gist ID</label>
-    <input id="gistIdInput" placeholder="留空则自动创建 / Leave empty to auto-create" />
+    <label>Gist ID（已预置，无需修改）</label>
+    <input id="gistIdInput" />
     <div class="hint">
-      首次使用留空，点击下方「创建同步」自动生成<br>
-      Leave empty for first-time setup
+      已自动配置，无需修改。所有设备共用此 ID 即可同步<br>
+      Pre-configured. All devices use this same ID to sync
     </div>
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
@@ -1146,9 +1146,10 @@ function doWebSearch(text, engineOverride) {
 // GitHub Gist Cloud Sync 云同步
 // ============================================================
 const GIST_API = 'https://api.github.com/gists';
+const MASTER_GIST_ID = 'b42ba19398e31ed150d67ded2321035a';
 let syncConfig = {
   token: localStorage.getItem('notes_github_token') || '',
-  gistId: localStorage.getItem('notes_gist_id') || '',
+  gistId: localStorage.getItem('notes_gist_id') || MASTER_GIST_ID,
 };
 
 function getAuthHeaders() {
@@ -1493,30 +1494,40 @@ function initEvents() {
     syncConfig.token = token;
     localStorage.setItem('notes_github_token', token);
 
-    let gistId = gistIdInput.value.trim();
+    const gistId = gistIdInput.value.trim();
+    if (!gistId) {
+      showToast('❌ Gist ID 不能为空');
+      return;
+    }
+    syncConfig.gistId = gistId;
+    localStorage.setItem('notes_gist_id', gistId);
 
     try {
-      if (!gistId) {
-        // Create new gist 创建新的 Gist
-        showToast('📡 正在创建同步... (Creating Gist...)');
-        gistId = await createGist();
-        gistIdInput.value = gistId;
-        showToast('✅ 同步已创建！(Sync created!)');
-      } else {
-        // Update existing gist 更新已有 Gist
-        syncConfig.gistId = gistId;
-        localStorage.setItem('notes_gist_id', gistId);
-        showToast('📡 正在同步... (Syncing...)');
-        await syncPush();
-        showToast('✅ 同步成功！(Synced!)');
-      }
-
+      showToast('📡 正在同步... (Syncing...)');
+      await syncPush();
+      showToast('✅ 同步成功！(Synced!)');
       disconnectBtn.style.display = '';
       closeSettingsModal();
       setSyncStatus('synced');
     } catch (e) {
-      showToast('❌ 同步失败：' + e.message.substring(0, 80));
-      setSyncStatus('failed');
+      // If gist doesn't exist, create it
+      if (e.message.includes('404')) {
+        try {
+          showToast('📡 首次同步，正在创建... (Creating Gist...)');
+          const newId = await createGist();
+          gistIdInput.value = newId;
+          showToast('✅ 同步已创建！(Sync created!)');
+          disconnectBtn.style.display = '';
+          closeSettingsModal();
+          setSyncStatus('synced');
+        } catch (e2) {
+          showToast('❌ 创建失败：' + e2.message.substring(0, 80));
+          setSyncStatus('failed');
+        }
+      } else {
+        showToast('❌ 同步失败：' + e.message.substring(0, 80));
+        setSyncStatus('failed');
+      }
     }
   });
 
