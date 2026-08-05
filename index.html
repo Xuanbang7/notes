@@ -1503,15 +1503,25 @@ function initEvents() {
     localStorage.setItem('notes_gist_id', gistId);
 
     try {
+      // Pull first to get latest data, then merge, then push
+      // 先拉取最新数据，合并后再上传
       showToast('📡 正在同步... (Syncing...)');
+      const remoteNotes = await syncPull();
+      if (remoteNotes && remoteNotes.length > 0) {
+        state.notes = mergeNotes(state.notes, remoteNotes);
+        saveNotes();
+        state.activeNoteId = state.notes.length > 0 ? state.notes[0].id : null;
+        renderAll();
+        showToast('✅ 已从云端拉取 ' + remoteNotes.length + ' 篇笔记并合并 (Pulled & merged)');
+      }
       await syncPush();
-      showToast('✅ 同步成功！(Synced!)');
       disconnectBtn.style.display = '';
       closeSettingsModal();
       setSyncStatus('synced');
+      showToast('✅ 同步成功！(Synced!)');
     } catch (e) {
-      // If gist doesn't exist, create it
-      if (e.message.includes('404')) {
+      // If gist doesn't exist (404), create it
+      if (e.message.includes('404') || e.message.includes('Not Found')) {
         try {
           showToast('📡 首次同步，正在创建... (Creating Gist...)');
           const newId = await createGist();
@@ -1570,8 +1580,9 @@ function init() {
   marked.use({ extensions: [wikiLinkExtension] });
 
   state.notes = loadNotes();
-  // Add demo notes if empty 首次使用时添加示例笔记
-  if (state.notes.length === 0) {
+  // Add demo notes only if empty AND sync not configured
+  // 仅在本地无数据且未配置同步时添加示例笔记
+  if (state.notes.length === 0 && !(syncConfig.token && syncConfig.gistId)) {
     const now = new Date().toISOString();
     state.notes = [
       {
