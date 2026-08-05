@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习笔记 - 事业编备考</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+/* ===== CSS Variables 配色变量 ===== */
+:root {
+  --bg: #fafaf8;
+  --bg-sidebar: #f3f2ef;
+  --text: #1a1a1a;
+  --text-secondary: #787774;
+  --border: #e8e7e4;
+  --accent: #2563eb;
+  --hover: #efeeeb;
+  --tag-bg: #e5e7eb;
+  --tag-text: #374151;
+  --wl-exists: #2563eb;
+  --wl-missing: #dc2626;
+  --save-ok: #16a34a;
+  --radius: 6px;
+  --sidebar-w: 270px;
+}
+
+/* ===== Reset ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+}
+
+/* ===== Layout 布局 ===== */
+.app { display: flex; height: 100vh; }
+
+/* ===== Top Bar 顶部栏 ===== */
+.topbar {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar .menu-btn {
+  background: none; border: none; font-size: 20px; cursor: pointer; padding: 4px 8px;
+  color: var(--text);
+}
+.topbar .search-input {
+  flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; background: var(--bg-sidebar); outline: none;
+}
+.topbar .search-input:focus { border-color: var(--accent); }
+.topbar .new-note-btn {
+  background: var(--accent); color: #fff; border: none; padding: 8px 14px;
+  border-radius: var(--radius); font-size: 14px; cursor: pointer; white-space: nowrap;
+}
+.topbar .new-note-btn:hover { opacity: 0.9; }
+
+/* ===== Sidebar 侧边栏 ===== */
+.sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w);
+  background: var(--bg-sidebar); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; height: 100%;
+}
+.sidebar-header {
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
+}
+.sidebar-search {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; background: #fff; outline: none; margin-bottom: 8px;
+}
+.sidebar-search:focus { border-color: var(--accent); }
+.sidebar-search-options { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+.sidebar-search-options label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.sidebar-tags {
+  padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 6px;
+  border-bottom: 1px solid var(--border); max-height: 100px; overflow-y: auto;
+}
+.sidebar-tags .tag-chip {
+  font-size: 12px; padding: 3px 8px; border-radius: 12px; cursor: pointer;
+  background: var(--tag-bg); color: var(--tag-text); border: 1px solid transparent;
+  white-space: nowrap; transition: all 0.15s;
+}
+.sidebar-tags .tag-chip:hover { border-color: var(--accent); }
+.sidebar-tags .tag-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.note-list { flex: 1; overflow-y: auto; }
+.note-list-item {
+  padding: 12px 16px; cursor: pointer; border-bottom: 1px solid transparent;
+  transition: background 0.15s; position: relative;
+}
+.note-list-item:hover { background: var(--hover); }
+.note-list-item.active { background: #e5e7eb; }
+.note-list-item .item-title {
+  font-size: 14px; font-weight: 500; margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.note-list-item .item-meta {
+  font-size: 12px; color: var(--text-secondary); display: flex; gap: 6px; flex-wrap: wrap;
+}
+.note-list-item .item-meta em { background: #fde68a; font-style: normal; border-radius: 2px; padding: 0 2px; }
+
+.sidebar-footer {
+  padding: 10px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px;
+}
+.sidebar-footer button {
+  flex: 1; padding: 6px 0; font-size: 12px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: #fff; cursor: pointer; color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.sidebar-footer button:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ===== Main Content 主内容区 ===== */
+.main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.main-inner {
+  flex: 1; overflow-y: auto; padding: 40px 48px; max-width: 780px; width: 100%; margin: 0 auto;
+}
+.title-input {
+  width: 100%; border: none; outline: none; font-size: 28px; font-weight: 700;
+  background: transparent; color: var(--text); padding: 0; margin-bottom: 8px;
+  font-family: inherit;
+}
+.title-input::placeholder { color: #ccc; }
+
+.tag-editor {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px;
+}
+.tag-editor .tag-chip {
+  font-size: 12px; padding: 3px 8px; border-radius: 12px;
+  background: var(--tag-bg); color: var(--tag-text); display: inline-flex; align-items: center; gap: 4px;
+}
+.tag-editor .tag-chip .tag-close {
+  cursor: pointer; font-size: 14px; line-height: 1; opacity: 0.5;
+}
+.tag-editor .tag-chip .tag-close:hover { opacity: 1; }
+.tag-input {
+  border: 1px solid transparent; outline: none; font-size: 13px; padding: 2px 6px;
+  background: transparent; color: var(--text); width: 100px; min-width: 80px;
+}
+.tag-input:focus { border-color: var(--border); border-radius: 4px; background: #fff; }
+
+.mode-bar {
+  display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;
+}
+.mode-btn {
+  padding: 6px 12px; font-size: 13px; border: 1px solid transparent; background: transparent;
+  border-radius: var(--radius); cursor: pointer; color: var(--text-secondary); transition: all 0.15s;
+}
+.mode-btn:hover { background: var(--hover); }
+.mode-btn.active { background: var(--accent); color: #fff; }
+
+.save-indicator {
+  font-size: 12px; color: var(--text-secondary); margin-left: auto; display: flex; align-items: center;
+}
+
+.editor-area { display: flex; gap: 20px; flex: 1; min-height: 300px; }
+.editor-area .pane { flex: 1; }
+.editor-area .pane-divider { width: 1px; background: var(--border); }
+
+.content-textarea {
+  width: 100%; height: 100%; min-height: 300px; border: none; outline: none; resize: none;
+  font-family: "SF Mono", "Fira Code", "Menlo", "Consolas", monospace;
+  font-size: 14px; line-height: 1.7; background: transparent; color: var(--text);
+}
+.preview-pane {
+  line-height: 1.8; overflow-y: auto;
+}
+.preview-pane h1 { font-size: 1.6em; margin: 0.6em 0 0.3em; }
+.preview-pane h2 { font-size: 1.3em; margin: 0.6em 0 0.3em; }
+.preview-pane h3 { font-size: 1.1em; margin: 0.5em 0 0.2em; }
+.preview-pane p { margin: 0.4em 0; }
+.preview-pane ul, .preview-pane ol { padding-left: 1.5em; margin: 0.3em 0; }
+.preview-pane code { background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+.preview-pane pre { background: #f1f5f9; padding: 14px 18px; border-radius: var(--radius); overflow-x: auto; margin: 0.5em 0; }
+.preview-pane pre code { background: none; padding: 0; }
+.preview-pane blockquote {
+  border-left: 3px solid var(--accent); padding: 4px 14px; margin: 0.5em 0;
+  color: var(--text-secondary); background: #f8fafc;
+}
+.preview-pane table { border-collapse: collapse; width: 100%; margin: 0.5em 0; }
+.preview-pane th, .preview-pane td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+.preview-pane th { background: var(--bg-sidebar); }
+.preview-pane img { max-width: 100%; border-radius: var(--radius); }
+
+/* WikiLinks 双链样式 */
+.wikilink { cursor: pointer; text-decoration: none; transition: all 0.15s; }
+.wikilink.wl-exists { color: var(--wl-exists); border-bottom: 1px solid var(--wl-exists); }
+.wikilink.wl-exists:hover { background: #dbeafe; border-radius: 3px; }
+.wikilink.wl-missing { color: var(--wl-missing); border-bottom: 1px dashed var(--wl-missing); font-style: italic; }
+.wikilink.wl-missing:hover { background: #fee2e2; border-radius: 3px; }
+
+/* Backlinks 反向链接 */
+.backlinks {
+  margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border);
+}
+.backlinks h3 { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+.backlink-item {
+  display: block; padding: 6px 12px; border-radius: var(--radius); cursor: pointer;
+  color: var(--text); text-decoration: none; font-size: 14px; transition: background 0.15s;
+}
+.backlink-item:hover { background: var(--hover); }
+
+/* ===== Floating Search Popup 选中文字浮动搜索按钮 ===== */
+.float-search-popup {
+  display: none; position: fixed; z-index: 1000;
+  background: var(--accent); color: #fff; padding: 6px 14px;
+  border-radius: 18px; font-size: 13px; cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15); white-space: nowrap;
+  transition: transform 0.15s;
+}
+.float-search-popup:hover { transform: scale(1.05); }
+
+/* ===== Sidebar Web Search 侧边栏联网搜索 ===== */
+.sidebar-web-search {
+  padding: 10px 16px; border-top: 1px solid var(--border);
+}
+.sidebar-web-search-label {
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 4px;
+}
+.sidebar-web-search-row {
+  display: flex; gap: 6px;
+}
+.sidebar-web-search-row select {
+  font-size: 12px; padding: 6px 8px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: #fff; color: var(--text); outline: none;
+  cursor: pointer;
+}
+.sidebar-web-search-row input {
+  flex: 1; padding: 6px 10px; font-size: 13px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: #fff; outline: none; min-width: 0;
+}
+.sidebar-web-search-row input:focus { border-color: var(--accent); }
+.sidebar-web-search-row button {
+  padding: 6px 12px; font-size: 13px; border: none; border-radius: var(--radius);
+  background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap;
+}
+.sidebar-web-search-row button:hover { opacity: 0.9; }
+
+/* ===== Web Results Panel 搜索结果面板 ===== */
+.web-results-panel {
+  border-top: 2px solid var(--accent); margin-top: 12px;
+  display: none; flex-direction: column; min-height: 200px;
+  background: #fff; border-radius: var(--radius) var(--radius) 0 0;
+}
+.web-results-panel.open { display: flex; }
+.web-results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+}
+.web-results-header span { font-size: 13px; color: var(--text); font-weight: 500; }
+.web-results-header button {
+  background: none; border: none; cursor: pointer; font-size: 16px;
+  color: var(--text-secondary); padding: 2px 6px; border-radius: 4px;
+}
+.web-results-header button:hover { background: var(--hover); }
+.web-results-iframe {
+  flex: 1; border: none; min-height: 350px;
+}
+
+/* ===== Settings Modal 设置弹窗 ===== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 100; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 10px; padding: 28px;
+  max-width: 440px; width: 90%; box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+.modal h3 { font-size: 16px; margin-bottom: 16px; }
+.modal label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 4px; margin-top: 12px; }
+.modal input {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; outline: none; font-family: monospace;
+}
+.modal input:focus { border-color: var(--accent); }
+.modal .hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.modal .hint a { color: var(--accent); }
+.modal-buttons { display: flex; gap: 8px; margin-top: 18px; justify-content: flex-end; }
+.modal-buttons button {
+  padding: 8px 16px; border-radius: var(--radius); font-size: 13px; cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: #fff; border: none; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--hover); }
+.btn-danger { background: #fff; color: #dc2626; border: 1px solid #dc2626; }
+.btn-danger:hover { background: #fee2e2; }
+
+/* Sync status 同步状态 */
+.sync-indicator {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 12px;
+  padding: 4px 10px; border-radius: 12px;
+}
+.sync-indicator.synced { color: var(--save-ok); }
+.sync-indicator.syncing { color: #d97706; }
+.sync-indicator.failed { color: var(--wl-missing); }
+
+/* ===== Empty State 空状态 ===== */
+.empty-state {
+  text-align: center; color: var(--text-secondary); padding: 60px 20px;
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { margin: 4px 0; font-size: 14px; }
+
+/* ===== Delete button ===== */
+.delete-btn {
+  background: none; border: none; color: #dc2626; cursor: pointer; font-size: 13px;
+  padding: 6px 12px; border-radius: var(--radius); transition: background 0.15s;
+}
+.delete-btn:hover { background: #fee2e2; }
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* ===== Responsive 响应式 ===== */
+@media (max-width: 768px) {
+  .topbar { display: flex; }
+  .sidebar {
+    position: fixed; top: 0; left: 0; height: 100%; z-index: 20;
+    transform: translateX(-100%); transition: transform 0.25s;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 15;
+  }
+  .sidebar-overlay.open { display: block; }
+  .main-inner { padding: 20px 16px; }
+  .title-input { font-size: 22px; }
+  .editor-area.split { flex-direction: column; }
+  .editor-area .pane-divider { width: 100%; height: 1px; }
+}
+@media (min-width: 769px) {
+  .sidebar-overlay { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Top Bar (mobile) 顶部栏（移动端） -->
+  <div class="topbar" id="topbar">
+    <button class="menu-btn" id="menuBtn" title="菜单 (Menu)">☰</button>
+    <input class="search-input" id="mobileSearch" placeholder="搜索笔记... (Search notes...)" />
+    <button class="new-note-btn" id="mobileNewNote">+ 新建 (New)</button>
+  </div>
+
+  <!-- Sidebar Overlay (mobile) 侧边栏遮罩（移动端） -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Sidebar 侧边栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <input class="sidebar-search" id="desktopSearch" placeholder="🔍 搜索笔记... (Search notes...)" />
+      <div class="sidebar-search-options">
+        <label><input type="checkbox" id="deepSearch" /> 同时搜索正文 (Search content)</label>
+      </div>
+    </div>
+    <div class="sidebar-tags" id="sidebarTags"></div>
+    <div class="note-list" id="noteList"></div>
+    <div class="sidebar-web-search">
+      <div class="sidebar-web-search-label">🌐 联网搜索 (Web Search)</div>
+      <div class="sidebar-web-search-row">
+        <select id="searchEngine">
+          <option value="sogou">搜狗</option>
+          <option value="baidu">百度</option>
+          <option value="bing">Bing</option>
+          <option value="google">Google</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+        </select>
+        <input id="webSearchInput" placeholder="搜索关键词... (Search)" />
+        <button id="webSearchBtn">搜索</button>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <button id="exportBtn">⬇ 导出</button>
+      <button id="importBtn">⬆ 导入</button>
+      <button id="syncSettingsBtn" title="云同步设置 (Sync Settings)">☁️ 同步</button>
+    </div>
+  </aside>
+
+  <!-- Main Content 主内容区 -->
+  <main class="main" id="main">
+    <div class="main-inner" id="mainInner">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📒</div>
+        <p>点击左侧「+」或按 <kbd>Cmd+N</kbd> 创建第一篇笔记</p>
+        <p>Click the + button or press <kbd>Cmd+N</kbd> to create your first note</p>
+      </div>
+
+      <div id="editorArea" style="display:none;">
+        <input class="title-input" id="titleInput" placeholder="笔记标题 (Note title)" />
+
+        <div class="tag-editor" id="tagEditor">
+          <input class="tag-input" id="tagInput" placeholder="添加标签... (Add tag, press Enter)" />
+        </div>
+
+        <div class="mode-bar">
+          <button class="mode-btn active" data-mode="edit">编辑 (Edit)</button>
+          <button class="mode-btn" data-mode="preview">预览 (Preview)</button>
+          <button class="mode-btn" data-mode="split">分屏 (Split)</button>
+          <span class="save-indicator" id="saveIndicator">✅ 已保存 (Saved)</span>
+          <button class="delete-btn" id="deleteBtn" style="margin-left:8px;">🗑 删除 (Delete)</button>
+        </div>
+
+        <div class="editor-area" id="editorAreaInner">
+          <div class="pane" id="editPane">
+            <textarea class="content-textarea" id="contentTextarea"
+              placeholder="输入 Markdown 内容...&#10;支持 [[双链]] 语法，例如 [[另一篇笔记]]&#10;(Type Markdown, use [[note title]] to link)"></textarea>
+          </div>
+          <div class="pane-divider" id="paneDivider" style="display:none;"></div>
+          <div class="pane preview-pane" id="previewPane" style="display:none;"></div>
+        </div>
+
+        <div class="backlinks" id="backlinks" style="display:none;"></div>
+      </div>
+
+      <!-- Web Results Panel 搜索结果面板 -->
+      <div class="web-results-panel" id="webResultsPanel">
+        <div class="web-results-header">
+          <span id="webResultsTitle">🔍 搜索结果 (Search Results)</span>
+          <button id="webResultsClose" title="关闭 (Close)">✕</button>
+        </div>
+        <iframe class="web-results-iframe" id="webResultsIframe" loading="lazy"></iframe>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Floating Search Popup 选中文字浮动搜索 -->
+<div class="float-search-popup" id="floatSearch">🔍 Google 搜索 (Search)</div>
+
+<!-- Settings Modal 设置弹窗 -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h3>☁️ 云同步设置 (Cloud Sync)</h3>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">
+      使用 GitHub Gist 免费同步笔记到所有设备
+    </p>
+    <label>GitHub Token（个人访问令牌）</label>
+    <input id="githubToken" placeholder="ghp_xxxxxxxxxxxx" />
+    <div class="hint">
+      <a href="https://github.com/settings/tokens/new?scopes=gist&description=notes-app" target="_blank">
+        点此创建 Token（只需勾选 gist 权限）
+      </a>
+      <br>Create a token with <b>gist</b> scope only
+    </div>
+
+    <label>Gist ID</label>
+    <input id="gistIdInput" placeholder="留空则自动创建 / Leave empty to auto-create" />
+    <div class="hint">
+      首次使用留空，点击下方「创建同步」自动生成<br>
+      Leave empty for first-time setup
+    </div>
+
+    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+      <span class="sync-indicator" id="syncStatus" style="display:none;"></span>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="btn-danger" id="disconnectSync" style="display:none;margin-right:auto;">
+        断开同步 (Disconnect)
+      </button>
+      <button class="btn-secondary" id="closeSettings">取消 (Cancel)</button>
+      <button class="btn-primary" id="saveAndSync">创建/更新同步 (Save & Sync)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input for import -->
+<input type="file" id="importFileInput" accept=".json" style="display:none;" />
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// Constants & Config 常量与配置
+// ============================================================
+const STORAGE_KEY = 'notes_app_v1';
+const SEARCH_ENGINES = {
+  sogou: 'https://www.sogou.com/web?query=',
+  bing: 'https://cn.bing.com/search?q=',
+  baidu: 'https://www.baidu.com/s?wd=',
+  duckduckgo: 'https://lite.duckduckgo.com/lite/?q=',
+  google: 'https://www.google.com/search?q=',
+};
+const DEFAULT_ENGINE = 'sogou';
+
+// Engines that support iframe embedding 支持 iframe 内嵌的搜索引擎
+// 注：大部分搜索引擎禁止 iframe，此处仅列出经测试可用的
+// Most search engines block iframe; only list tested-working ones here
+const IFRAME_ENGINES = new Set([]); // 全部改为新标签页打开，最稳定
+
+// ============================================================
+// State Management 状态管理
+// ============================================================
+let state = {
+  notes: [],
+  activeNoteId: null,
+  mode: 'edit',        // 'edit' | 'preview' | 'split'
+  searchQuery: '',
+  deepSearch: false,
+  activeTag: null,     // null = all
+};
+
+// ============================================================
+// Storage 存储
+// ============================================================
+function loadNotes() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    if (data.version !== undefined) return data.notes || [];
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.warn('数据读取失败，已重置 (Data corrupted, reset)', e);
+    return [];
+  }
+}
+
+function saveNotes() {
+  try {
+    const data = { version: 1, notes: state.notes };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    showSaveStatus('ok');
+    // Trigger debounced sync upload 触发放debounce的同步上传
+    scheduleSyncPush();
+  } catch (e) {
+    if (e.name === 'QuotaExceededError') {
+      showToast('❌ 存储空间不足，请导出数据后清理旧笔记 (Storage full, please export and clean)');
+      showSaveStatus('err');
+    } else {
+      showSaveStatus('err');
+    }
+  }
+}
+
+let saveTimer = null;
+function autoSave() {
+  showSaveStatus('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNotes, 500);
+}
+
+let syncTimer = null;
+function scheduleSyncPush() {
+  if (!syncConfig.token || !syncConfig.gistId) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncPush(), 3000); // 3s debounce for sync
+}
+
+function showSaveStatus(status) {
+  const el = document.getElementById('saveIndicator');
+  if (!el) return;
+  if (status === 'saving') { el.textContent = '⏳ 保存中...'; el.style.color = 'var(--text-secondary)'; }
+  else if (status === 'ok') { el.textContent = '✅ 已保存 (Saved)'; el.style.color = 'var(--save-ok)'; }
+  else if (status === 'err') { el.textContent = '❌ 保存失败 (Failed)'; el.style.color = 'var(--wl-missing)'; }
+}
+
+// ============================================================
+// Helpers 工具函数
+// ============================================================
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getActiveNote() {
+  return state.notes.find(n => n.id === state.activeNoteId) || null;
+}
+
+function getNoteByTitle(title) {
+  return state.notes.find(n => n.title.toLowerCase() === title.toLowerCase());
+}
+
+// ============================================================
+// marked WikiLink Extension 双链扩展
+// ============================================================
+const wikiLinkExtension = {
+  name: 'wikilink',
+  level: 'inline',
+  start(src) { return src.indexOf('[['); },
+  tokenizer(src) {
+    const rule = /^\[\[([^\]]+)\]\]/;
+    const match = rule.exec(src);
+    if (match) {
+      return { type: 'wikilink', raw: match[0], title: match[1].trim() };
+    }
+  },
+  renderer(token) {
+    const noteExists = state.notes.some(n => n.title.toLowerCase() === token.title.toLowerCase());
+    const cssClass = noteExists ? 'wl-exists' : 'wl-missing';
+    const tooltip = noteExists ? '打开笔记 (Open note)' : '创建笔记 (Create note)';
+    return `<a class="wikilink ${cssClass}" data-target="${escapeHtml(token.title)}" href="javascript:void(0)" title="${tooltip}">${escapeHtml(token.title)}</a>`;
+  }
+};
+
+// marked wikilink extension is registered once at init
+// 双链扩展在初始化时注册一次
+// Pre-process content to protect code blocks/spans from wikilink parsing
+// 预处理：保护代码块和行内代码不被双链解析
+function renderMarkdown(content) {
+  const codeBlocks = [];
+  let protected_ = content
+    .replace(/```[\s\S]*?```/g, (m) => { codeBlocks.push(m); return `\x00CB${codeBlocks.length - 1}\x00`; })
+    .replace(/`[^`\n]+`/g, (m) => { codeBlocks.push(m); return `\x00CB${codeBlocks.length - 1}\x00`; });
+
+  let html = marked.parse(protected_);
+
+  // Restore code blocks 还原代码块
+  html = html.replace(/\x00CB(\d+)\x00/g, (_, i) => {
+    const code = codeBlocks[parseInt(i)];
+    if (code.startsWith('`') && !code.startsWith('``')) {
+      return `<code>${escapeHtml(code.slice(1, -1))}</code>`;
+    }
+    const langMatch = code.match(/^```(\w*)\n?/);
+    const inner = code.replace(/^```\w*\n?/, '').replace(/```$/, '');
+    return `<pre><code>${escapeHtml(inner)}</code></pre>`;
+  });
+
+  return html;
+}
+
+// ============================================================
+// Compute Backlinks 计算反向链接
+// ============================================================
+function computeBacklinks(title) {
+  if (!title) return [];
+  const backlinks = [];
+  const escapedTitle = escapeRegex(title);
+  const regex = new RegExp(`\\[\\[${escapedTitle}\\]\\]`, 'gi');
+  for (const note of state.notes) {
+    if (note.title.toLowerCase() === title.toLowerCase()) continue;
+    if (regex.test(note.content)) {
+      backlinks.push(note);
+      regex.lastIndex = 0;
+    }
+  }
+  return backlinks;
+}
+
+// ============================================================
+// Render Functions 渲染函数
+// ============================================================
+
+// Render sidebar note list 渲染侧边栏笔记列表
+function renderNoteList() {
+  const listEl = document.getElementById('noteList');
+  let notes = state.notes;
+
+  // Filter by tag 按标签筛选
+  if (state.activeTag) {
+    notes = notes.filter(n => n.tags.includes(state.activeTag));
+  }
+
+  // Filter by search query 按搜索词筛选
+  if (state.searchQuery.trim()) {
+    const q = state.searchQuery.toLowerCase();
+    notes = notes.filter(n =>
+      n.title.toLowerCase().includes(q) ||
+      (state.deepSearch && n.content.toLowerCase().includes(q))
+    );
+  }
+
+  // Sort by updatedAt desc
+  notes = [...notes].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+  if (notes.length === 0) {
+    const msg = state.notes.length === 0
+      ? '暂无笔记，点击下方按钮创建 (No notes yet)'
+      : '没有匹配的笔记 (No matching notes)';
+    listEl.innerHTML = `<div class="empty-state" style="padding:30px 16px;"><p style="font-size:13px;">${msg}</p></div>`;
+    return;
+  }
+
+  listEl.innerHTML = notes.map(n => {
+    const activeClass = n.id === state.activeNoteId ? ' active' : '';
+    let titleHtml = escapeHtml(n.title || '未命名笔记 (Untitled)');
+
+    // Highlight search match in title 标题中高亮搜索词
+    if (state.searchQuery.trim()) {
+      const q = escapeRegex(state.searchQuery.trim());
+      const re = new RegExp(`(${q})`, 'gi');
+      titleHtml = titleHtml.replace(re, '<em>$1</em>');
+    }
+
+    const tagsHtml = n.tags.slice(0, 3).map(t => `<span>#${escapeHtml(t)}</span>`).join(' ');
+    const dateStr = new Date(n.updatedAt).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+
+    return `
+      <div class="note-list-item${activeClass}" data-id="${n.id}">
+        <div class="item-title">${titleHtml}</div>
+        <div class="item-meta">
+          <span>${dateStr}</span>
+          ${tagsHtml ? '<span>' + tagsHtml + '</span>' : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// Render main editor 渲染主编辑区
+function renderEditor() {
+  const note = getActiveNote();
+  const emptyState = document.getElementById('emptyState');
+  const editorArea = document.getElementById('editorArea');
+
+  if (!note) {
+    emptyState.style.display = '';
+    editorArea.style.display = 'none';
+    updateModeUI();
+    return;
+  }
+
+  emptyState.style.display = 'none';
+  editorArea.style.display = '';
+
+  document.getElementById('titleInput').value = note.title;
+  document.getElementById('contentTextarea').value = note.content;
+  renderTags();
+  updateModeUI();
+  updatePreview();
+}
+
+// Render tags for current note 渲染当前笔记的标签
+function renderTags() {
+  const note = getActiveNote();
+  const tagEditor = document.getElementById('tagEditor');
+  if (!note) return;
+
+  tagEditor.innerHTML = note.tags.map(t => `
+    <span class="tag-chip">
+      ${escapeHtml(t)}
+      <span class="tag-close" data-tag="${escapeHtml(t)}">&times;</span>
+    </span>
+  `).join('') + '<input class="tag-input" id="tagInput" placeholder="添加标签... (Add tag, press Enter)" />';
+
+  // Re-bind tag input
+  const tagInput = document.getElementById('tagInput');
+  if (tagInput) {
+    tagInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addTag(tagInput.value.trim());
+        tagInput.value = '';
+      }
+    });
+  }
+
+  // Re-bind tag close buttons
+  tagEditor.querySelectorAll('.tag-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      removeTag(btn.dataset.tag);
+    });
+  });
+}
+
+// Render sidebar tag filter chips 渲染侧边栏标签筛选
+function renderSidebarTags() {
+  const allTags = new Set();
+  state.notes.forEach(n => n.tags.forEach(t => allTags.add(t)));
+  const sorted = [...allTags].sort();
+  const el = document.getElementById('sidebarTags');
+
+  let html = `<span class="tag-chip${state.activeTag === null ? ' active' : ''}" data-tag="">全部 (All)</span>`;
+  sorted.forEach(t => {
+    const active = state.activeTag === t ? ' active' : '';
+    html += `<span class="tag-chip${active}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`;
+  });
+  el.innerHTML = html;
+
+  // Bind click events
+  el.querySelectorAll('.tag-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      state.activeTag = chip.dataset.tag || null;
+      renderAll();
+    });
+  });
+}
+
+// Update preview pane 更新预览
+function updatePreview() {
+  const note = getActiveNote();
+  const previewPane = document.getElementById('previewPane');
+  if (!note) return;
+
+  const html = renderMarkdown(note.content);
+  previewPane.innerHTML = html;
+
+  // Bind wikilink clicks in preview 绑定双链点击事件
+  previewPane.querySelectorAll('.wikilink').forEach(link => {
+    link.addEventListener('click', () => {
+      const targetTitle = link.dataset.target;
+      openOrCreateNote(targetTitle);
+    });
+  });
+
+  // Render backlinks 渲染反向链接
+  renderBacklinks(note.title);
+}
+
+// Render backlinks 渲染反向链接
+function renderBacklinks(title) {
+  const el = document.getElementById('backlinks');
+  const backlinks = computeBacklinks(title);
+  if (backlinks.length === 0) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = '';
+  el.innerHTML = `
+    <h3>🔗 反向链接 (Backlinks) — 引用了这篇笔记的其他笔记</h3>
+    ${backlinks.map(b => `
+      <a class="backlink-item" data-id="${b.id}" href="javascript:void(0)">
+        📝 ${escapeHtml(b.title)}
+        <span style="font-size:12px;color:var(--text-secondary);"> — ${new Date(b.updatedAt).toLocaleDateString('zh-CN')}</span>
+      </a>
+    `).join('')}`;
+
+  // Bind backlink clicks
+  el.querySelectorAll('.backlink-item').forEach(item => {
+    item.addEventListener('click', () => {
+      selectNote(item.dataset.id);
+    });
+  });
+}
+
+// Update mode UI (edit/preview/split) 更新模式 UI
+function updateModeUI() {
+  const note = getActiveNote();
+  const editPane = document.getElementById('editPane');
+  const previewPane = document.getElementById('previewPane');
+  const paneDivider = document.getElementById('paneDivider');
+  const editorAreaInner = document.getElementById('editorAreaInner');
+
+  if (!note) {
+    editPane.style.display = '';
+    previewPane.style.display = 'none';
+    paneDivider.style.display = 'none';
+    editorAreaInner.classList.remove('split');
+    return;
+  }
+
+  if (state.mode === 'edit') {
+    editPane.style.display = '';
+    previewPane.style.display = 'none';
+    paneDivider.style.display = 'none';
+    editorAreaInner.classList.remove('split');
+  } else if (state.mode === 'preview') {
+    editPane.style.display = 'none';
+    previewPane.style.display = '';
+    paneDivider.style.display = 'none';
+    editorAreaInner.classList.remove('split');
+  } else if (state.mode === 'split') {
+    editPane.style.display = '';
+    previewPane.style.display = '';
+    paneDivider.style.display = '';
+    editorAreaInner.classList.add('split');
+    updatePreview();
+  }
+}
+
+// Render all 全量渲染
+function renderAll() {
+  renderSidebarTags();
+  renderNoteList();
+  renderEditor();
+  // Update mobile search sync
+  const note = getActiveNote();
+  document.getElementById('mobileSearch').value = state.searchQuery;
+  document.getElementById('desktopSearch').value = state.searchQuery;
+  document.getElementById('deepSearch').checked = state.deepSearch;
+}
+
+// ============================================================
+// Note CRUD 笔记增删改
+// ============================================================
+function createNote() {
+  const now = new Date().toISOString();
+  const note = {
+    id: crypto.randomUUID(),
+    title: '',
+    content: '',
+    tags: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  state.notes.unshift(note);
+  state.activeNoteId = note.id;
+  saveNotes();
+  renderAll();
+  // Focus title input
+  setTimeout(() => document.getElementById('titleInput').focus(), 50);
+}
+
+function selectNote(id) {
+  state.activeNoteId = id;
+  // Close sidebar on mobile
+  if (window.innerWidth <= 768) closeSidebar();
+  renderAll();
+  // Scroll to top of main content
+  document.getElementById('mainInner').scrollTop = 0;
+}
+
+function deleteNote() {
+  const note = getActiveNote();
+  if (!note) return;
+  const name = note.title || '未命名笔记 (Untitled)';
+  if (!confirm(`确定删除「${name}」？\nDelete this note?`)) return;
+
+  state.notes = state.notes.filter(n => n.id !== note.id);
+  state.activeNoteId = state.notes.length > 0 ? state.notes[0].id : null;
+  saveNotes();
+  renderAll();
+  showToast('已删除 (Deleted)');
+}
+
+function openOrCreateNote(title) {
+  const existing = getNoteByTitle(title);
+  if (existing) {
+    selectNote(existing.id);
+  } else {
+    // Create new note with this title
+    const now = new Date().toISOString();
+    const note = {
+      id: crypto.randomUUID(),
+      title: title,
+      content: '',
+      tags: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    state.notes.unshift(note);
+    state.activeNoteId = note.id;
+    saveNotes();
+    renderAll();
+    showToast(`✅ 已创建笔记「${title}」(Note created)`);
+  }
+}
+
+// ============================================================
+// Tag Operations 标签操作
+// ============================================================
+function addTag(tag) {
+  const note = getActiveNote();
+  if (!note || !tag) return;
+  const normalized = tag.toLowerCase().trim();
+  if (!normalized) return;
+  if (note.tags.includes(normalized)) return; // duplicate
+  note.tags.push(normalized);
+  note.updatedAt = new Date().toISOString();
+  saveNotes();
+  renderAll();
+}
+
+function removeTag(tag) {
+  const note = getActiveNote();
+  if (!note) return;
+  note.tags = note.tags.filter(t => t !== tag);
+  note.updatedAt = new Date().toISOString();
+  saveNotes();
+  renderAll();
+}
+
+// ============================================================
+// Export / Import 导入导出
+// ============================================================
+function exportNotes() {
+  const data = { version: 1, notes: state.notes };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `notes-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('⬇ 导出成功 (Exported)');
+}
+
+function importNotes(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const notes = data.notes || data;
+      if (!Array.isArray(notes)) throw new Error('Invalid format');
+
+      const action = confirm(
+        `发现 ${notes.length} 篇笔记。\nFound ${notes.length} notes.\n\n` +
+        `确定 = 替换现有笔记 (Replace existing)\n取消 = 合并 (Merge)`
+      );
+
+      if (action) {
+        state.notes = notes;
+      } else {
+        // Merge: add notes that don't exist by title
+        const existingTitles = new Set(state.notes.map(n => n.title.toLowerCase()));
+        for (const n of notes) {
+          if (!existingTitles.has(n.title.toLowerCase())) {
+            state.notes.push(n);
+          }
+        }
+      }
+      state.activeNoteId = state.notes.length > 0 ? state.notes[0].id : null;
+      saveNotes();
+      renderAll();
+      showToast('⬆ 导入成功 (Imported)');
+    } catch (err) {
+      showToast('❌ 文件格式无效 (Invalid file format)');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// Search 搜索
+// ============================================================
+function updateSearch(query) {
+  state.searchQuery = query;
+  document.getElementById('mobileSearch').value = query;
+  document.getElementById('desktopSearch').value = query;
+  renderNoteList();
+}
+
+// ============================================================
+// Text Selection Web Search 选中文字联网搜索
+// ============================================================
+let floatSearchTimer = null;
+
+function showFloatSearch(x, y, text) {
+  const popup = document.getElementById('floatSearch');
+  popup.textContent = `🔍 Google 搜索 "${text.slice(0, 30)}${text.length > 30 ? '...' : ''}" (Search)`;
+  popup.style.display = '';
+  popup.style.left = x + 'px';
+  popup.style.top = (y - 40) + 'px';
+  popup.dataset.text = text;
+  clearTimeout(floatSearchTimer);
+}
+
+function hideFloatSearch() {
+  floatSearchTimer = setTimeout(() => {
+    document.getElementById('floatSearch').style.display = 'none';
+  }, 300);
+}
+
+function doWebSearch(text, engineOverride) {
+  const engine = engineOverride || localStorage.getItem('notes_search_engine') || DEFAULT_ENGINE;
+  const url = SEARCH_ENGINES[engine] + encodeURIComponent(text);
+  // 直接新标签页打开，最稳定可靠
+  // Open in new tab — most reliable approach
+  window.open(url, '_blank');
+}
+
+// ============================================================
+// GitHub Gist Cloud Sync 云同步
+// ============================================================
+const GIST_API = 'https://api.github.com/gists';
+let syncConfig = {
+  token: localStorage.getItem('notes_github_token') || '',
+  gistId: localStorage.getItem('notes_gist_id') || '',
+};
+
+function getAuthHeaders() {
+  return {
+    'Authorization': 'Bearer ' + syncConfig.token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.style.display = 'inline-flex';
+  el.className = 'sync-indicator';
+  if (status === 'syncing') { el.className += ' syncing'; el.textContent = '⏳ 同步中... (Syncing)'; }
+  else if (status === 'synced') { el.className += ' synced'; el.textContent = '☁️ 已同步 (Synced)'; }
+  else if (status === 'failed') { el.className += ' failed'; el.textContent = '❌ 同步失败 (Failed)'; }
+  else if (status === 'disconnected') { el.style.display = 'none'; el.textContent = ''; }
+}
+
+async function syncPush() {
+  if (!syncConfig.token || !syncConfig.gistId) return;
+  try {
+    setSyncStatus('syncing');
+    const content = JSON.stringify({ version: 1, notes: state.notes }, null, 2);
+    const resp = await fetch(`${GIST_API}/${syncConfig.gistId}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        files: { 'notes.json': { content } },
+      }),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    setSyncStatus('synced');
+  } catch (e) {
+    console.warn('上传同步失败 (Push failed):', e.message);
+    setSyncStatus('failed');
+  }
+}
+
+async function syncPull() {
+  if (!syncConfig.token || !syncConfig.gistId) return null;
+  try {
+    const resp = await fetch(`${GIST_API}/${syncConfig.gistId}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const gist = await resp.json();
+    const file = gist.files && gist.files['notes.json'];
+    if (!file || !file.content) return null;
+    const data = JSON.parse(file.content);
+    const notes = data.notes || data;
+    if (!Array.isArray(notes)) return null;
+    return notes;
+  } catch (e) {
+    console.warn('下载同步失败 (Pull failed):', e.message);
+    return null;
+  }
+}
+
+function mergeNotes(localNotes, remoteNotes) {
+  // Merge: remote wins on conflict by updatedAt; add missing notes
+  // 合并策略：按 updatedAt 取最新版本，补充本地没有的笔记
+  const merged = new Map();
+  for (const n of localNotes) merged.set(n.id, n);
+  for (const n of remoteNotes) {
+    const existing = merged.get(n.id);
+    if (!existing || new Date(n.updatedAt) > new Date(existing.updatedAt)) {
+      merged.set(n.id, n);
+    }
+  }
+  return [...merged.values()];
+}
+
+async function syncNow() {
+  if (!syncConfig.token || !syncConfig.gistId) return;
+  // Pull, merge, then push
+  const remoteNotes = await syncPull();
+  if (remoteNotes) {
+    state.notes = mergeNotes(state.notes, remoteNotes);
+    saveNotes(); // to localStorage
+  }
+  await syncPush();
+  renderAll();
+}
+
+async function createGist() {
+  try {
+    const content = JSON.stringify({ version: 1, notes: state.notes }, null, 2);
+    const resp = await fetch(GIST_API, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        description: 'Notes App Data - 学习笔记',
+        public: false,
+        files: { 'notes.json': { content } },
+      }),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const gist = await resp.json();
+    syncConfig.gistId = gist.id;
+    localStorage.setItem('notes_gist_id', gist.id);
+    return gist.id;
+  } catch (e) {
+    console.error('创建 Gist 失败:', e);
+    throw e;
+  }
+}
+
+// ============================================================
+// Sidebar Toggle (mobile) 侧边栏切换（移动端）
+// ============================================================
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ============================================================
+// Toast 提示
+// ============================================================
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// Event Bindings 事件绑定
+// ============================================================
+function initEvents() {
+  // Menu button (mobile) 菜单按钮（移动端）
+  document.getElementById('menuBtn').addEventListener('click', openSidebar);
+  document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+  // Desktop search 桌面端搜索
+  const desktopSearch = document.getElementById('desktopSearch');
+  desktopSearch.addEventListener('input', () => updateSearch(desktopSearch.value));
+
+  // Mobile search 移动端搜索
+  const mobileSearch = document.getElementById('mobileSearch');
+  mobileSearch.addEventListener('input', () => updateSearch(mobileSearch.value));
+
+  // Deep search toggle 深度搜索切换
+  document.getElementById('deepSearch').addEventListener('change', (e) => {
+    state.deepSearch = e.target.checked;
+    renderNoteList();
+  });
+
+  // New note buttons 新建笔记按钮
+  document.getElementById('mobileNewNote').addEventListener('click', () => {
+    createNote();
+    if (window.innerWidth <= 768) closeSidebar();
+  });
+
+  // Sidebar note list clicks 侧边栏列表点击（事件委托）
+  document.getElementById('noteList').addEventListener('click', (e) => {
+    const item = e.target.closest('.note-list-item');
+    if (item) selectNote(item.dataset.id);
+  });
+
+  // Title input 标题输入
+  document.getElementById('titleInput').addEventListener('input', () => {
+    const note = getActiveNote();
+    if (!note) return;
+    note.title = document.getElementById('titleInput').value;
+    note.updatedAt = new Date().toISOString();
+    autoSave();
+  });
+
+  // Content textarea 内容输入
+  document.getElementById('contentTextarea').addEventListener('input', () => {
+    const note = getActiveNote();
+    if (!note) return;
+    note.content = document.getElementById('contentTextarea').value;
+    note.updatedAt = new Date().toISOString();
+    autoSave();
+    // Live preview in split mode 分屏模式实时预览
+    if (state.mode === 'split') updatePreview();
+  });
+
+  // Mode buttons 模式切换
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.mode = btn.dataset.mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateModeUI();
+      if (state.mode === 'preview' || state.mode === 'split') updatePreview();
+    });
+  });
+
+  // Delete button 删除按钮
+  document.getElementById('deleteBtn').addEventListener('click', deleteNote);
+
+  // Sidebar web search 侧边栏联网搜索
+  const webSearchInput = document.getElementById('webSearchInput');
+  const doSidebarWebSearch = () => {
+    const query = webSearchInput.value.trim();
+    if (!query) return;
+    const engine = document.getElementById('searchEngine').value;
+    localStorage.setItem('notes_search_engine', engine);
+    doWebSearch(query, engine);
+    webSearchInput.value = '';
+  };
+  document.getElementById('webSearchBtn').addEventListener('click', doSidebarWebSearch);
+  webSearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSidebarWebSearch();
+  });
+
+  // Web results panel close button 关闭搜索结果面板
+  document.getElementById('webResultsClose').addEventListener('click', () => {
+    const panel = document.getElementById('webResultsPanel');
+    panel.classList.remove('open');
+    document.getElementById('webResultsIframe').src = '';
+  });
+
+  // Export button 导出按钮
+  document.getElementById('exportBtn').addEventListener('click', exportNotes);
+
+  // Import button 导入按钮
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFileInput').click();
+  });
+  document.getElementById('importFileInput').addEventListener('change', (e) => {
+    if (e.target.files[0]) importNotes(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  // Text selection for web search 选中文字弹出搜索按钮
+  document.addEventListener('mouseup', (e) => {
+    const selection = window.getSelection();
+    const text = selection.toString().trim();
+    if (text && text.length > 0 && text.length < 200) {
+      // Only show if selection is in preview or main content area
+      const inMain = document.getElementById('main').contains(e.target);
+      if (inMain) {
+        showFloatSearch(e.clientX, e.clientY, text);
+        return;
+      }
+    }
+    hideFloatSearch();
+  });
+
+  // Float search popup click 浮动搜索按钮点击
+  document.getElementById('floatSearch').addEventListener('click', (e) => {
+    const text = e.target.dataset.text;
+    if (text) doWebSearch(text);
+    document.getElementById('floatSearch').style.display = 'none';
+  });
+  document.getElementById('floatSearch').addEventListener('mouseenter', () => {
+    clearTimeout(floatSearchTimer);
+  });
+  document.getElementById('floatSearch').addEventListener('mouseleave', () => {
+    document.getElementById('floatSearch').style.display = 'none';
+  });
+
+  // Click elsewhere to close float search 点击其他地方关闭
+  document.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('.float-search-popup')) {
+      hideFloatSearch();
+    }
+  });
+
+  // Keyboard shortcuts 键盘快捷键
+  document.addEventListener('keydown', (e) => {
+    const isMeta = e.metaKey || e.ctrlKey;
+
+    // Cmd/Ctrl + N: New note 新建笔记
+    if (isMeta && e.key === 'n') {
+      e.preventDefault();
+      createNote();
+    }
+
+    // Cmd/Ctrl + S: Save 保存
+    if (isMeta && e.key === 's') {
+      e.preventDefault();
+      saveNotes();
+      showToast('💾 已保存 (Saved)');
+    }
+
+    // Cmd/Ctrl + Shift + G: Search selection 搜索选中文字
+    if (isMeta && e.shiftKey && e.key === 'G') {
+      e.preventDefault();
+      const text = window.getSelection().toString().trim();
+      if (text) doWebSearch(text);
+    }
+
+    // Escape: Clear search 清除搜索
+    if (e.key === 'Escape') {
+      if (state.searchQuery) {
+        updateSearch('');
+        renderNoteList();
+      }
+    }
+  });
+
+  // Handle wikilink clicks in preview (event delegation) 预览区双链点击（事件委托）
+  document.getElementById('previewPane').addEventListener('click', (e) => {
+    const link = e.target.closest('.wikilink');
+    if (link) {
+      e.preventDefault();
+      openOrCreateNote(link.dataset.target);
+    }
+  });
+
+  // Settings modal 云同步设置弹窗
+  const settingsModal = document.getElementById('settingsModal');
+  const githubTokenInput = document.getElementById('githubToken');
+  const gistIdInput = document.getElementById('gistIdInput');
+  const disconnectBtn = document.getElementById('disconnectSync');
+
+  function openSettingsModal() {
+    githubTokenInput.value = syncConfig.token;
+    gistIdInput.value = syncConfig.gistId;
+    disconnectBtn.style.display = syncConfig.gistId ? '' : 'none';
+    settingsModal.classList.add('open');
+  }
+
+  function closeSettingsModal() {
+    settingsModal.classList.remove('open');
+  }
+
+  document.getElementById('syncSettingsBtn').addEventListener('click', openSettingsModal);
+  document.getElementById('closeSettings').addEventListener('click', closeSettingsModal);
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeSettingsModal();
+  });
+
+  document.getElementById('saveAndSync').addEventListener('click', async () => {
+    const token = githubTokenInput.value.trim();
+    if (!token) { showToast('❌ 请输入 GitHub Token (Token required)'); return; }
+
+    syncConfig.token = token;
+    localStorage.setItem('notes_github_token', token);
+
+    let gistId = gistIdInput.value.trim();
+
+    try {
+      if (!gistId) {
+        // Create new gist 创建新的 Gist
+        showToast('📡 正在创建同步... (Creating Gist...)');
+        gistId = await createGist();
+        gistIdInput.value = gistId;
+        showToast('✅ 同步已创建！(Sync created!)');
+      } else {
+        // Update existing gist 更新已有 Gist
+        syncConfig.gistId = gistId;
+        localStorage.setItem('notes_gist_id', gistId);
+        showToast('📡 正在同步... (Syncing...)');
+        await syncPush();
+        showToast('✅ 同步成功！(Synced!)');
+      }
+
+      disconnectBtn.style.display = '';
+      closeSettingsModal();
+      setSyncStatus('synced');
+    } catch (e) {
+      showToast('❌ 同步失败：' + e.message.substring(0, 80));
+      setSyncStatus('failed');
+    }
+  });
+
+  document.getElementById('disconnectSync').addEventListener('click', () => {
+    if (!confirm('确定断开同步？本地数据不会丢失。\nDisconnect sync? Local data will be kept.')) return;
+    syncConfig.token = '';
+    syncConfig.gistId = '';
+    localStorage.removeItem('notes_github_token');
+    localStorage.removeItem('notes_gist_id');
+    gistIdInput.value = '';
+    disconnectBtn.style.display = 'none';
+    setSyncStatus('disconnected');
+    closeSettingsModal();
+    showToast('已断开同步 (Disconnected)');
+  });
+
+  // Resize handler for responsive 窗口大小变化处理
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) closeSidebar();
+  });
+}
+
+// ============================================================
+// Initialization 初始化
+// ============================================================
+function init() {
+  // Register wikilink extension once 注册双链扩展（仅一次）
+  marked.use({ extensions: [wikiLinkExtension] });
+
+  state.notes = loadNotes();
+  // Add demo notes if empty 首次使用时添加示例笔记
+  if (state.notes.length === 0) {
+    const now = new Date().toISOString();
+    state.notes = [
+      {
+        id: crypto.randomUUID(),
+        title: '行测-资料分析',
+        content: '## 资料分析 (Data Analysis)\n\n### 核心公式\n\n- **增长率** = (现期量 - 基期量) / 基期量 × 100%\n- **隔年增长率** = r1 + r2 + r1×r2\n- **平均数增长率** = (a - b) / (1 + b)\n\n### 速算技巧\n\n1. 截位直除法\n2. 特征数字法\n3. 差分比较法\n\n参见 [[行测-数量关系]] 和 [[行测答题时间分配]]。',
+        tags: ['行测', '资料分析'],
+        createdAt: now, updatedAt: now,
+      },
+      {
+        id: crypto.randomUUID(),
+        title: '申论大作文模板',
+        content: '## 申论大作文结构 (Essay Structure)\n\n### 五段三分式\n\n1. **开头 (引论)**：引用材料 + 亮出观点\n2. **分论点一**：原因分析\n3. **分论点二**：影响分析\n4. **分论点三**：对策建议\n5. **结尾 (结论)**：回扣主题 + 升华\n\n### 常用金句\n\n- "民之所望，政之所向"\n- "治国有常，而利民为本"\n\n参见 [[申论热点素材]] 和 [[公文写作格式]]。',
+        tags: ['申论', '写作'],
+        createdAt: now, updatedAt: now,
+      },
+      {
+        id: crypto.randomUUID(),
+        title: '公基-法律常识',
+        content: '## 法律常识 (Legal Knowledge)\n\n### 宪法\n\n- 根本法地位\n- 公民基本权利\n- 国家机构体系\n\n### 行政法\n\n- 行政主体\n- 行政行为分类\n- 行政复议与诉讼\n\n### 民法要点\n\n- 民事主体\n- 合同与侵权\n- 诉讼时效\n\n参见 [[公基-政治理论]] 和 [[行测-常识判断]]。',
+        tags: ['公基', '法律'],
+        createdAt: now, updatedAt: now,
+      },
+    ];
+    saveNotes();
+  }
+
+  initEvents();
+  if (state.notes.length > 0) {
+    state.activeNoteId = state.notes[0].id;
+  }
+  renderAll();
+  updatePreview();
+
+  // Sync search inputs
+  document.getElementById('mobileSearch').value = state.searchQuery;
+  document.getElementById('desktopSearch').value = state.searchQuery;
+  document.getElementById('deepSearch').checked = state.deepSearch;
+
+  console.log('📒 Notes 笔记应用已就绪 (Ready)');
+  console.log(`   ${state.notes.length} 篇笔记 (notes) 已加载`);
+  console.log('   💡 提示: 用 [[笔记标题]] 创建双链 (Use [[title]] to link notes)');
+  console.log('   ⌨️  快捷键 (Shortcuts): Cmd+N 新建, Cmd+S 保存, Cmd+Shift+G 搜索选中文字');
+
+  // Initial cloud sync: pull from Gist if configured 启动时自动从 Gist 拉取
+  if (syncConfig.token && syncConfig.gistId) {
+    console.log('☁️ 正在从云端同步... (Syncing from cloud...)');
+    syncNow().then(() => {
+      console.log('☁️ 云端同步完成 (Cloud sync done)');
+      if (state.notes.length > 0) {
+        state.activeNoteId = state.notes[0].id;
+      }
+      renderAll();
+      updatePreview();
+    }).catch(() => {
+      console.warn('☁️ 云端同步失败，使用本地数据 (Sync failed, using local data)');
+    });
+  }
+}
+
+// Start 启动
+init();
+</script>
+</body>
+</html>
