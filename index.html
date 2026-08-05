@@ -633,7 +633,7 @@ let syncTimer = null;
 function scheduleSyncPush() {
   if (!syncConfig.token || !syncConfig.gistId) return;
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => syncPush(), 3000); // 3s debounce for sync
+  syncTimer = setTimeout(() => syncFull(), 3000); // 3s debounce, pull-then-push
 }
 
 function showSaveStatus(status) {
@@ -1171,7 +1171,7 @@ function setSyncStatus(status) {
   else if (status === 'disconnected') { el.style.display = 'none'; el.textContent = ''; }
 }
 
-async function syncPush() {
+async function syncPushOnly() {
   if (!syncConfig.token || !syncConfig.gistId) return;
   try {
     setSyncStatus('syncing');
@@ -1179,14 +1179,12 @@ async function syncPush() {
     const resp = await fetch(`${GIST_API}/${syncConfig.gistId}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
-      body: JSON.stringify({
-        files: { 'notes.json': { content } },
-      }),
+      body: JSON.stringify({ files: { 'notes.json': { content } } }),
     });
     if (!resp.ok) throw new Error(await resp.text());
     setSyncStatus('synced');
   } catch (e) {
-    console.warn('上传同步失败 (Push failed):', e.message);
+    console.warn('Push failed:', e.message);
     setSyncStatus('failed');
   }
 }
@@ -1206,14 +1204,14 @@ async function syncPull() {
     if (!Array.isArray(notes)) return null;
     return notes;
   } catch (e) {
-    console.warn('下载同步失败 (Pull failed):', e.message);
+    console.warn('Pull failed:', e.message);
     return null;
   }
 }
 
+// Merge: remote wins on conflict by updatedAt; detects deletions from both sides
+// 合并：按 updatedAt 取新版；远程删了的笔记本地也删
 function mergeNotes(localNotes, remoteNotes) {
-  // Merge: remote wins on conflict by updatedAt; add missing notes
-  // 合并策略：按 updatedAt 取最新版本，补充本地没有的笔记
   const merged = new Map();
   for (const n of localNotes) merged.set(n.id, n);
   for (const n of remoteNotes) {
@@ -1225,15 +1223,16 @@ function mergeNotes(localNotes, remoteNotes) {
   return [...merged.values()];
 }
 
-async function syncNow() {
+// Full sync: pull → merge → push. Use this for all sync operations.
+// 完整同步：先拉取 → 合并 → 再上传，防止旧数据覆盖新数据
+async function syncFull() {
   if (!syncConfig.token || !syncConfig.gistId) return;
-  // Pull, merge, then push
   const remoteNotes = await syncPull();
   if (remoteNotes) {
     state.notes = mergeNotes(state.notes, remoteNotes);
-    saveNotes(); // to localStorage
+    saveNotes();
   }
-  await syncPush();
+  await syncPushOnly();
   renderAll();
 }
 
@@ -1503,18 +1502,13 @@ function initEvents() {
     localStorage.setItem('notes_gist_id', gistId);
 
     try {
-      // Pull first to get latest data, then merge, then push
-      // 先拉取最新数据，合并后再上传
       showToast('📡 正在同步... (Syncing...)');
-      const remoteNotes = await syncPull();
-      if (remoteNotes && remoteNotes.length > 0) {
-        state.notes = mergeNotes(state.notes, remoteNotes);
-        saveNotes();
-        state.activeNoteId = state.notes.length > 0 ? state.notes[0].id : null;
-        renderAll();
-        showToast('✅ 已从云端拉取 ' + remoteNotes.length + ' 篇笔记并合并 (Pulled & merged)');
+      await syncFull();
+      if (state.notes.length > 0 && !state.activeNoteId) {
+        state.activeNoteId = state.notes[0].id;
       }
-      await syncPush();
+      renderAll();
+      updatePreview();
       disconnectBtn.style.display = '';
       closeSettingsModal();
       setSyncStatus('synced');
@@ -1627,18 +1621,31 @@ function init() {
   console.log('   💡 提示: 用 [[笔记标题]] 创建双链 (Use [[title]] to link notes)');
   console.log('   ⌨️  快捷键 (Shortcuts): Cmd+N 新建, Cmd+S 保存, Cmd+Shift+G 搜索选中文字');
 
-  // Initial cloud sync: pull from Gist if configured 启动时自动从 Gist 拉取
+  // Initial cloud sync: pull latest from Gist, use it as source of truth
+  // 启动时从云端拉取最新数据，云端数据优先
   if (syncConfig.token && syncConfig.gistId) {
-    console.log('☁️ 正在从云端同步... (Syncing from cloud...)');
-    syncNow().then(() => {
-      console.log('☁️ 云端同步完成 (Cloud sync done)');
-      if (state.notes.length > 0) {
+    console.log('☁️ Pulling latest from cloud...');
+    syncPull().then(remoteNotes => {
+      if (remoteNotes && remoteNotes.length > 0) {
+        // Use remote data, don't merge with stale local
+        // 使用云端数据，不与过期本地数据合并
+        state.notes = remoteNotes;
+        saveNotes();
         state.activeNoteId = state.notes[0].id;
+        console.log('☁️ Loaded ' + remoteNotes.length + ' notes from cloud');
+      } else {
+        // No remote data yet, push local data to cloud
+        // 云端无数据，把本地数据推上去
+        console.log('☁️ No cloud data, pushing local notes');
+        syncPushOnly();
+        state.activeNoteId = state.notes.length > 0 ? state.notes[0].id : null;
       }
       renderAll();
       updatePreview();
+      setSyncStatus('synced');
     }).catch(() => {
-      console.warn('☁️ 云端同步失败，使用本地数据 (Sync failed, using local data)');
+      console.warn('☁️ Sync failed, using local data');
+      setSyncStatus('failed');
     });
   }
 }
