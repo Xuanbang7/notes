@@ -1173,13 +1173,21 @@ async function syncPushOnly() {
     const content = JSON.stringify({ version: 1, notes: state.notes }, null, 2);
     const resp = await fetch(`${GIST_API}/${syncConfig.gistId}`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
+      headers: {
+        'Authorization': 'Bearer ' + syncConfig.token,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ files: { 'notes.json': { content } } }),
     });
-    if (!resp.ok) throw new Error(await resp.text());
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error('Push HTTP', resp.status, errText);
+      throw new Error(resp.status + ' ' + errText.substring(0, 100));
+    }
     setSyncStatus('synced');
   } catch (e) {
-    console.warn('Push failed:', e.message);
+    console.error('Push failed:', e.message);
     setSyncStatus('failed');
   }
 }
@@ -1188,9 +1196,16 @@ async function syncPull() {
   if (!syncConfig.token || !syncConfig.gistId) return null;
   try {
     const resp = await fetch(`${GIST_API}/${syncConfig.gistId}`, {
-      headers: getAuthHeaders(),
+      headers: {
+        'Authorization': 'Bearer ' + syncConfig.token,
+        'Accept': 'application/vnd.github+json',
+      },
     });
-    if (!resp.ok) throw new Error(await resp.text());
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error('Pull HTTP', resp.status, errText);
+      throw new Error(resp.status + ' ' + errText.substring(0, 100));
+    }
     const gist = await resp.json();
     const file = gist.files && gist.files['notes.json'];
     if (!file || !file.content) return null;
@@ -1199,7 +1214,7 @@ async function syncPull() {
     if (!Array.isArray(notes)) return null;
     return notes;
   } catch (e) {
-    console.warn('Pull failed:', e.message);
+    console.error('Pull failed:', e.message);
     return null;
   }
 }
@@ -1509,24 +1524,10 @@ function initEvents() {
       setSyncStatus('synced');
       showToast('✅ 同步成功！(Synced!)');
     } catch (e) {
-      // If gist doesn't exist (404), create it
-      if (e.message.includes('404') || e.message.includes('Not Found')) {
-        try {
-          showToast('📡 首次同步，正在创建... (Creating Gist...)');
-          const newId = await createGist();
-          gistIdInput.value = newId;
-          showToast('✅ 同步已创建！(Sync created!)');
-          disconnectBtn.style.display = '';
-          closeSettingsModal();
-          setSyncStatus('synced');
-        } catch (e2) {
-          showToast('❌ 创建失败：' + e2.message.substring(0, 80));
-          setSyncStatus('failed');
-        }
-      } else {
-        showToast('❌ 同步失败：' + e.message.substring(0, 80));
-        setSyncStatus('failed');
-      }
+      const errMsg = e.message || String(e);
+      console.error('Sync error:', errMsg);
+      showToast('❌ 同步失败：' + errMsg.substring(0, 120));
+      setSyncStatus('failed');
     }
   });
 
