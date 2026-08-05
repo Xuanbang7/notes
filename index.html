@@ -361,7 +361,7 @@ body {
   }
   .mode-btn { padding: 4px 8px; font-size: 12px; }
   .save-indicator { font-size: 11px; margin-left: 4px; }
-  .delete-btn { display: none; } /* hidden on mobile, use sidebar to delete */
+  .delete-btn { font-size: 12px; padding: 4px 8px; }
 
   /* Editor fills remaining space 编辑器自动撑满 */
   .content-textarea { font-size: 16px; }
@@ -994,6 +994,12 @@ function deleteNote() {
   const name = note.title || '未命名笔记 (Untitled)';
   if (!confirm(`确定删除「${name}」？\nDelete this note?`)) return;
 
+  // Record deletion so sync doesn't revive it
+  // 记录删除，防止同步时复活
+  const deleted = JSON.parse(localStorage.getItem('notes_deleted') || '{}');
+  deleted[note.id] = new Date().toISOString();
+  localStorage.setItem('notes_deleted', JSON.stringify(deleted));
+
   state.notes = state.notes.filter(n => n.id !== note.id);
   state.activeNoteId = state.notes.length > 0 ? state.notes[0].id : null;
   saveNotes();
@@ -1219,17 +1225,29 @@ async function syncPull() {
   }
 }
 
-// Merge: remote wins on conflict by updatedAt; detects deletions from both sides
-// 合并：按 updatedAt 取新版；远程删了的笔记本地也删
+// Merge: remote wins on conflict by updatedAt. Respects deletions (deleted > updatedAt check).
+// 合并：按 updatedAt 取新版；本地删了的笔记不会被远程复活
 function mergeNotes(localNotes, remoteNotes) {
+  const deleted = JSON.parse(localStorage.getItem('notes_deleted') || '{}');
   const merged = new Map();
   for (const n of localNotes) merged.set(n.id, n);
   for (const n of remoteNotes) {
+    // Skip if this note was deleted locally after remote version was saved
+    // 如果本地的删除时间晚于远程更新时间，跳过（不复活已删除的笔记）
+    const delTime = deleted[n.id];
+    if (delTime && new Date(delTime) >= new Date(n.updatedAt)) continue;
     const existing = merged.get(n.id);
     if (!existing || new Date(n.updatedAt) > new Date(existing.updatedAt)) {
       merged.set(n.id, n);
     }
   }
+  // Clean up old deleted entries (older than 30 days) 清理超过30天的删除记录
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const cleaned = {};
+  for (const [id, time] of Object.entries(deleted)) {
+    if (time > cutoff) cleaned[id] = time;
+  }
+  localStorage.setItem('notes_deleted', JSON.stringify(cleaned));
   return [...merged.values()];
 }
 
