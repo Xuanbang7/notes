@@ -625,10 +625,19 @@ function autoSave() {
 }
 
 let syncTimer = null;
+let lastSyncTime = 0;
 function scheduleSyncPush() {
   if (!syncConfig.token || !syncConfig.gistId) return;
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => syncFull(), 3000); // 3s debounce, pull-then-push
+  // Debounce 5s, minimum 30s between actual pushes to avoid rate limits
+  // 防抖 5 秒，最少间隔 30 秒防止频率限制
+  const minInterval = 30000;
+  const since = Date.now() - lastSyncTime;
+  const delay = since < minInterval ? minInterval - since : 5000;
+  syncTimer = setTimeout(() => {
+    lastSyncTime = Date.now();
+    syncFull();
+  }, delay);
 }
 
 function showSaveStatus(status) {
