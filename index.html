@@ -515,7 +515,7 @@ body {
       <br>Create a token with <b>gist</b> scope only
     </div>
 
-    <input id="gistIdInput" type="hidden" value="b42ba19398e31ed150d67ded2321035a" />
+    <input id="gistIdInput" type="hidden" value="0089bbff53365a43b58497e259704ca4" />
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
       <span class="sync-indicator" id="syncStatus" style="display:none;"></span>
@@ -1156,7 +1156,7 @@ function doWebSearch(text, engineOverride) {
 // GitHub Gist Cloud Sync 云同步
 // ============================================================
 const GIST_API = 'https://api.github.com/gists';
-const MASTER_GIST_ID = 'b42ba19398e31ed150d67ded2321035a';
+const MASTER_GIST_ID = '0089bbff53365a43b58497e259704ca4';
 let syncConfig = {
   token: localStorage.getItem('notes_github_token') || '',
   gistId: MASTER_GIST_ID, // Always use the same Gist, ignore localStorage
