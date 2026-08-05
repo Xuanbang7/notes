@@ -120,10 +120,11 @@ body {
 
 /* ===== Main Content 主内容区 ===== */
 .main {
-  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0;
 }
 .main-inner {
   flex: 1; overflow-y: auto; padding: 40px 48px; max-width: 780px; width: 100%; margin: 0 auto;
+  display: flex; flex-direction: column;
 }
 .title-input {
   width: 100%; border: none; outline: none; font-size: 28px; font-weight: 700;
@@ -163,12 +164,12 @@ body {
   font-size: 12px; color: var(--text-secondary); margin-left: auto; display: flex; align-items: center;
 }
 
-.editor-area { display: flex; gap: 20px; flex: 1; min-height: 300px; }
-.editor-area .pane { flex: 1; }
+.editor-area { display: flex; gap: 20px; flex: 1; min-height: 0; }
+.editor-area .pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .editor-area .pane-divider { width: 1px; background: var(--border); }
 
 .content-textarea {
-  width: 100%; height: 100%; min-height: 300px; border: none; outline: none; resize: none;
+  width: 100%; flex: 1; border: none; outline: none; resize: none;
   font-family: "SF Mono", "Fira Code", "Menlo", "Consolas", monospace;
   font-size: 14px; line-height: 1.7; background: transparent; color: var(--text);
 }
@@ -333,7 +334,7 @@ body {
 
 /* ===== Responsive 响应式 ===== */
 @media (max-width: 768px) {
-  /* Hide desktop sidebar, show mobile topbar 隐藏桌面侧边栏，显示移动端顶栏 */
+  /* Hide desktop sidebar, show mobile topbar */
   .sidebar {
     position: fixed; top: 0; left: 0; width: 85%; max-width: 320px; height: 100%;
     z-index: 20; transform: translateX(-100%); transition: transform 0.25s;
@@ -344,36 +345,37 @@ body {
   }
   .sidebar-overlay.open { display: block; }
 
-  /* Top bar 顶部栏 */
   .topbar { display: flex; }
   .app { flex-direction: column; }
 
-  /* Main content 主内容 */
-  .main-inner { padding: 16px 12px; }
-  .title-input { font-size: 20px; }
+  /* Main content — minimal chrome, max content */
+  .main-inner { padding: 12px 14px; }
+  .title-input { font-size: 18px; margin-bottom: 4px; }
+  .tag-editor { margin-bottom: 4px; }
+
+  /* Mode bar: compact row with delete hidden */
+  .mode-bar {
+    flex-wrap: wrap; gap: 2px; margin-bottom: 6px; padding-bottom: 6px;
+  }
+  .mode-btn { padding: 4px 8px; font-size: 12px; }
+  .save-indicator { font-size: 11px; margin-left: 4px; }
+  .delete-btn { display: none; } /* hidden on mobile, use sidebar to delete */
+
+  /* Editor fills remaining space 编辑器自动撑满 */
+  #editorArea { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .editor-area { flex: 1; min-height: 0; }
+  .content-textarea { font-size: 16px; }
+  .preview-pane { flex: 1; overflow-y: auto; }
+
+  /* Split mode: stack vertically */
   .editor-area.split { flex-direction: column; }
   .editor-area .pane-divider { width: 100%; height: 1px; }
 
-  /* Compact mode bar 模式栏紧凑 */
-  .mode-bar { flex-wrap: wrap; gap: 2px; }
-  .mode-btn { padding: 5px 8px; font-size: 12px; }
-  .save-indicator { font-size: 11px; }
-  .delete-btn { font-size: 12px; padding: 4px 8px; }
-
-  /* Make textarea taller on mobile 移动端编辑器更高 */
-  .content-textarea { min-height: 200px; font-size: 16px; }
-
-  /* Tag editor 标签编辑区 */
-  .tag-editor { gap: 4px; }
-  .tag-input { width: 80px; font-size: 16px; } /* 16px prevents iOS zoom */
-
-  /* Search input in topbar 顶栏搜索框 */
-  .topbar .search-input { font-size: 16px; } /* Prevent iOS zoom */
-
-  /* Modal wider on mobile 弹窗更宽 */
+  /* Font size for non-zoom */
+  .topbar .search-input, .tag-input { font-size: 16px; }
   .modal { width: 95%; padding: 20px; }
 
-  /* Mobile bottom bar 移动端底部导航栏 */
+  /* Bottom bar */
   .mobile-bottom-bar {
     display: flex; align-items: center; justify-content: space-around;
     background: #fff; border-top: 1px solid var(--border); padding: 6px 0;
@@ -387,9 +389,12 @@ body {
   }
   .mobile-bottom-bar button .icon { font-size: 20px; }
   .mobile-bottom-bar button.active { color: var(--accent); }
+
+  /* Backlinks compact */
+  .backlinks { margin-top: 16px; padding-top: 12px; }
 }
 
-/* Hide mobile bottom bar on desktop 桌面端隐藏底部栏 */
+/* Hide mobile bottom bar on desktop */
 @media (min-width: 769px) {
   .sidebar-overlay { display: none !important; }
   .mobile-bottom-bar { display: none !important; }
