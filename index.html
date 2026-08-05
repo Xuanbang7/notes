@@ -515,12 +515,7 @@ body {
       <br>Create a token with <b>gist</b> scope only
     </div>
 
-    <label>Gist ID（已预置，无需修改）</label>
-    <input id="gistIdInput" />
-    <div class="hint">
-      已自动配置，无需修改。所有设备共用此 ID 即可同步<br>
-      Pre-configured. All devices use this same ID to sync
-    </div>
+    <input id="gistIdInput" type="hidden" />
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
       <span class="sync-indicator" id="syncStatus" style="display:none;"></span>
@@ -1149,7 +1144,7 @@ const GIST_API = 'https://api.github.com/gists';
 const MASTER_GIST_ID = 'b42ba19398e31ed150d67ded2321035a';
 let syncConfig = {
   token: localStorage.getItem('notes_github_token') || '',
-  gistId: localStorage.getItem('notes_gist_id') || MASTER_GIST_ID,
+  gistId: MASTER_GIST_ID, // Always use the same Gist, ignore localStorage
 };
 
 function getAuthHeaders() {
